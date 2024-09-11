@@ -30,7 +30,8 @@ defmodule Dankie.Bot do
     answer(context, "Hi!")
   end
 
-  def handle({:command, "agregar", update}, context) do
+  def handle(bot_update = {:command, "agregar", update}, context) do
+    IO.inspect(bot_update)
     {:ok, response} = Dankie.Triggers.agregar(update)
     answer(context, response)
   end
