@@ -30,8 +30,7 @@ defmodule Dankie.Bot do
     answer(context, "Hi!")
   end
 
-  def handle(bot_update = {:command, "agregar", update}, context) do
-    IO.inspect(bot_update)
+  def handle({:command, "agregar", update}, context) do
     {:ok, response} = Dankie.Triggers.agregar(update)
     answer(context, response)
   end
@@ -41,10 +40,11 @@ defmodule Dankie.Bot do
     answer(context, Enum.join(state, "\n"))
   end
 
-  def handle({:command, unknown, _update}, context) do
-    Logger.warn("Unknown comand #{unknown} received...")
+  def handle({:command, unknown, _update}, _context) do
+    Logger.info("Unknown comand #{unknown} received, ignoring...")
   end
 
-  def handle({:text, _, _}, context) do
+  def handle({update, _, _}, _context) do
+    Logger.info("Unknown update of type #{update} received, ignoring...")
   end
 end
