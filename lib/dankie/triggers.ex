@@ -1,36 +1,30 @@
-defmodule Dankie.Agregar do
-  use GenServer
-  alias ExGram.Model.BotCommand
+defmodule Dankie.Triggers do
+  alias ExGram.Model.{Message, Chat}
+  import Dankie.Troesmas
 
-  def provides() do
-    [
-      %BotCommand{
-        command: "agregar",
-        description: "Agregar un trigger a la dankie"
-      }
-    ]
-  end
+  def agregar(%{text: ""}), do: {:ok, troesmizar("Me tenés que pasar un texto")}
 
-  def start_link(_) do
-    GenServer.start_link(__MODULE__, [])
-  end
+  def agregar(%{text: new_trigger, reply_to_message: %{chat: chat_id, message_id: msg_id}}) do
+    case check_regex(new_trigger) do
+      {:ok, _} ->
+        {:ok, troesmizar("Agregado el trigger")}
 
-  @impl true
-  def init(_) do
-    Process.register(self(), __MODULE__)
-    {:ok, []}
-  end
-
-  @impl true
-  def handle_call({:listar, msg, context}, from, state) do
-    {:reply, state, state}
-  end
-
-  @impl true
-  def handle_cast({:agregar, msg, context}, state) do
-    case msg do
-      %{text: ""} -> {:noreply, state}
-      %{text: text} -> {:noreply, [text | state]}
+      {:error, {reason, position}} ->
+        {:ok, format_error_message(reason, new_trigger, position)}
     end
+  end
+
+  def agregar(%{}), do: {:ok, troesmizar("Tenés que responderle a algo")}
+
+  defp format_error_message(reason, new_trigger, position) do
+    """
+    #{troesma()}, arreglá tu reglex:
+    *Error:* #{reason}
+    #{new_trigger} #{String.duplicate(" ", position)}^
+    """
+  end
+
+  def check_regex(regex) when is_binary(regex) do
+    Regex.compile(regex)
   end
 end
