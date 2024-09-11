@@ -19,8 +19,7 @@ defmodule Dankie.Application do
          method:
            {:webhook,
             [
-              url:
-                "https://074c-201-231-180-119.ngrok-free.app/telegram/PrBOmHWVIHxEPxuZ2DhP6XKW4t4="
+              url: System.fetch_env!("URL")
             ]},
          token: System.fetch_env!("BOT_TOKEN")
        ]}
