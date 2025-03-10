@@ -26,7 +26,6 @@ defmodule Dankie.Bot do
   end
 
   def handle({:command, :start, msg}, context) do
-    IO.inspect(msg)
     answer(context, "Hi!")
   end
 
@@ -38,6 +37,17 @@ defmodule Dankie.Bot do
   def handle({:command, "listar", msg}, context) do
     state = GenServer.call(Dankie.Agregar, {:listar, msg, context})
     answer(context, Enum.join(state, "\n"))
+  end
+
+  def handle({:command, "dolar", msg}, context) do
+    response =
+      Dankie.Dolar.fetch_data()
+      |> Dankie.Dolar.prepare_msg_text()
+
+    answer(
+      context,
+      response
+    )
   end
 
   def handle({:command, unknown, _update}, _context) do

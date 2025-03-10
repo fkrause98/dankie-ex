@@ -16,11 +16,7 @@ defmodule Dankie.Application do
       Dankie.Agregar,
       {Dankie.Bot,
        [
-         method:
-           {:webhook,
-            [
-              url: System.fetch_env!("URL")
-            ]},
+         method: :polling,
          token: System.fetch_env!("BOT_TOKEN")
        ]}
     ]

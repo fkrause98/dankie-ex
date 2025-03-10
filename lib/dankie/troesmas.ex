@@ -88,6 +88,7 @@ defmodule Dankie.Troesmas do
     "Willyrex",
     "Zeus"
   ]
+  @spec troesma() :: String.t()
   def troesma do
     @troesmas |> Enum.random()
   end
