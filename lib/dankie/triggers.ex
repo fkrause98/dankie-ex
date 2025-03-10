@@ -1,20 +1,29 @@
 defmodule Dankie.Triggers do
-  alias ExGram.Model.{Message, Chat}
   import Dankie.Troesmas
+  @triggers_table :triggers_table
 
-  def agregar(%{text: ""}), do: {:ok, troesmizar("Me tenés que pasar un texto")}
+  def add_trigger(%{text: ""}), do: {:ok, troesmizar("Me tenés que pasar un texto")}
 
-  def agregar(%{text: new_trigger, reply_to_message: %{chat: chat_id, message_id: msg_id}}) do
+  def add_trigger(%{
+        text: new_trigger,
+        reply_to_message: reply = %ExGram.Model.Message{}
+      }) do
+    chat_id = reply.chat.id
+    msg_id = reply.message_id
+
     case check_regex(new_trigger) do
-      {:ok, _} ->
+      {:ok, _regex} ->
+        {:ok, @triggers_table} = :dets.open_file(@triggers_table, [])
+        :dets.insert(@triggers_table, {new_trigger, {chat_id, msg_id}})
+        :dets.close(@triggers_table)
         {:ok, troesmizar("Agregado el trigger")}
 
       {:error, {reason, position}} ->
-        {:ok, format_error_message(reason, new_trigger, position)}
+        {:error, format_error_message(reason, new_trigger, position)}
     end
   end
 
-  def agregar(%{}), do: {:ok, troesmizar("Tenés que responderle a algo")}
+  def add_trigger(%{}), do: {:ok, troesmizar("Tenés que responderle a algo")}
 
   defp format_error_message(reason, new_trigger, position) do
     """
@@ -24,7 +33,36 @@ defmodule Dankie.Triggers do
     """
   end
 
-  def check_regex(regex) when is_binary(regex) do
+  @spec check_regex(String.t()) :: {:ok, Regex.t()} | {:error, term()}
+  defp check_regex(regex) when is_binary(regex) do
     Regex.compile(regex)
+  end
+
+  @spec check_trigger_match(String.t()) :: {:ok, String.t()} | {:error, :no_match}
+  def check_trigger_match(text) when is_binary(text) do
+    {:ok, @triggers_table} = :dets.open_file(@triggers_table, [])
+
+    result =
+      :dets.traverse(@triggers_table, fn {pattern, trigger_text} ->
+        case Regex.compile(pattern) do
+          {:ok, regex} ->
+            if Regex.match?(regex, text) do
+              # Return response and stop traversing
+              {:done, trigger_text}
+            else
+              :continue
+            end
+
+          _ ->
+            :continue
+        end
+      end)
+
+    :dets.close(@triggers_table)
+
+    case result do
+      [{trigger_chat_id, trigger_msg_id} | _] -> {:ok, {trigger_chat_id, trigger_msg_id}}
+      _ -> {:error, :no_match}
+    end
   end
 end

@@ -1,5 +1,6 @@
 defmodule Dankie.Dolar do
   require Logger
+  import Dankie.Troesmas
 
   @type exchange_rate :: %{
           required(String.t()) => String.t() | float() | String.t(),
@@ -33,9 +34,7 @@ defmodule Dankie.Dolar do
     |> Enum.join("\n")
   end
 
-  def prepare_msg_text({:error, _}) do
-    "No se pudo esta vez, intentá más tarde #{Dankie.Troesmas.troesma()}"
-  end
+  def prepare_msg_text({:error, _}), do: troesmizar("No se pudo esta vez, intentá más tarde")
 
   @spec format_single_exchange_rate(exchange_rate()) :: String.t()
   def format_single_exchange_rate(rate) do

@@ -30,7 +30,7 @@ defmodule Dankie.Bot do
   end
 
   def handle({:command, "agregar", update}, context) do
-    {:ok, response} = Dankie.Triggers.agregar(update)
+    {:ok, response} = Dankie.Triggers.add_trigger(update)
     answer(context, response)
   end
 
@@ -52,6 +52,19 @@ defmodule Dankie.Bot do
 
   def handle({:command, unknown, _update}, _context) do
     Logger.info("Unknown comand #{unknown} received, ignoring...")
+  end
+
+  def handle({:text, text, _msg}, _context) do
+    Logger.info("RECEIVED TEXT: #{text}")
+
+    case Dankie.Triggers.check_trigger_match(text) do
+      {:ok, {trigger_chat_id, trigger_msg_id}} ->
+        {:ok, _} =
+          ExGram.forward_message(trigger_chat_id, trigger_chat_id, trigger_msg_id, bot: @bot)
+
+      {:error, _} ->
+        nil
+    end
   end
 
   def handle({update, _, _}, _context) do
