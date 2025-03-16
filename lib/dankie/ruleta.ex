@@ -1,0 +1,46 @@
+defmodule Dankie.Ruleta.Supervisor do
+  use DynamicSupervisor
+
+  def start_link(init_arg) do
+    DynamicSupervisor.start_link(__MODULE__, init_arg, name: __MODULE__)
+  end
+
+  @impl true
+  def init(_init_arg) do
+    DynamicSupervisor.init(strategy: :one_for_one)
+  end
+
+  def new_game(chat_id) do
+    child_spec = {Dankie.Ruleta.Instance, chat_id}
+    DynamicSupervisor.start_child(__MODULE__, child_spec)
+  end
+
+  def advance_game(chat_id) do
+    case :global.whereis_name(chat_id) do
+      :undefined ->
+        {:error, :game_not_found}
+
+      pid ->
+        GenServer.call(pid, :pull_trigger)
+    end
+  end
+end
+
+defmodule Dankie.Ruleta.Instance do
+  use GenServer
+
+  def start_link(chat_id) do
+    GenServer.start_link(__MODULE__, chat_id, name: {:global, chat_id})
+  end
+
+  @impl true
+  def init(chat_id) do
+    {:ok, %{chat_id: chat_id, state: Enum.random([:empty, :shoot])}}
+  end
+
+  @impl true
+  def handle_call(:pull_trigger, _from, %{state: state} = game_state) do
+    result = Enum.random([:empty, :shoot])
+    {:reply, result, %{game_state | state: result}}
+  end
+end
