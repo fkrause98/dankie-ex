@@ -96,6 +96,10 @@ defmodule Dankie.Triggers do
     end
   end
 
+  @spec list_triggers(Message.t()) :: {:ok, String.t()} | {:error, String.t()}
+  @doc """
+  Returns a string with all the known triggers for a given chat.
+  """
   def list_triggers(%Message{chat: %{id: chat_id}}) do
     triggers = []
     trigger_accumulator = fn {trigger_text, _} -> {:continue, [trigger_text | triggers]} end
