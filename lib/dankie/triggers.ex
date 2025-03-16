@@ -11,8 +11,8 @@ defmodule Dankie.Triggers do
     msg_id = reply.message_id
 
     case check_regex(new_trigger) do
-      {:ok, _regex} ->
-        :ok = Dankie.Store.Triggers.store_trigger(new_trigger, chat_id, msg_id)
+      {:ok, regex} ->
+        :ok = Dankie.Store.Triggers.store_trigger(regex, chat_id, msg_id)
         {:ok, troesmizar("Agregado el trigger")}
 
       {:error, {reason, position}} ->
@@ -35,27 +35,44 @@ defmodule Dankie.Triggers do
     Regex.compile(regex)
   end
 
-  @spec check_trigger_match(String.t(), Int.t()) :: {:ok, String.t()} | {:error, :no_match}
+  # @spec check_trigger_match(String.t(), Int.t()) :: {:ok, String.t()} | {:error, :no_match}
   def check_trigger_match(text, chat_id) when is_binary(text) and is_number(chat_id) do
-    regex_matching_fun = fn {pattern, trigger_text} ->
-      case Regex.compile(pattern) do
-        {:ok, regex} ->
-          if Regex.match?(regex, text) do
-            {:done, trigger_text}
-          else
-            :continue
-          end
-
-        _ ->
+    regex_matching_fun = fn
+      {pattern, msg_id} ->
+        if Regex.match?(pattern, text) do
+          {:done, msg_id}
+        else
           :continue
-      end
+        end
+
+      _ ->
+        :continue
     end
 
-    result = Dankie.Store.Triggers.traverse_triggers_table(chat_id, regex_matching_fun)
+    {:ok, lookup_result} =
+      Dankie.Store.Triggers.traverse_triggers_table(chat_id, regex_matching_fun)
 
-    case result do
-      [{trigger_chat_id, trigger_msg_id} | _] -> {:ok, {trigger_chat_id, trigger_msg_id}}
+    case lookup_result do
+      [trigger_msg_id | _] -> {:ok, trigger_msg_id}
       _ -> {:error, :no_match}
+    end
+  end
+
+  def delete_trigger(%{text: to_delete, chat: %{id: chat_id}}) do
+    case Regex.compile(to_delete) do
+      {:ok, regex} ->
+        # TODO: Fijarse que el trigger exista antes y
+        # dar una respuesta en base a eso.
+        case Dankie.Store.Triggers.delete_trigger(regex, chat_id) do
+          :ok ->
+            {:ok, troesmizar("Borrado")}
+
+          _err ->
+            {:ok, troesmizar("Intenta más tarde")}
+        end
+
+      _ ->
+        {:ok, troesmizar("Eso no es un regex ni en pedo")}
     end
   end
 end

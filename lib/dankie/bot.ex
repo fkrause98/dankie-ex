@@ -35,8 +35,13 @@ defmodule Dankie.Bot do
   end
 
   def handle({:command, "listar", msg}, context) do
-    state = GenServer.call(Dankie.Agregar, {:listar, msg, context})
-    answer(context, Enum.join(state, "\n"))
+    # state = GenServer.call(Dankie.Agregar, {:listar, msg, context})
+    # answer(context, Enum.join(state, "\n"))
+  end
+
+  def handle({:command, "borrar", update}, context) do
+    {:ok, res} = Dankie.Triggers.delete_trigger(update)
+    answer(context, res)
   end
 
   def handle({:command, "dolar", _msg}, context) do
@@ -56,9 +61,9 @@ defmodule Dankie.Bot do
 
   def handle({:text, text, _msg = %Message{chat: %Chat{id: id}}}, _context) do
     case Dankie.Triggers.check_trigger_match(text, id) do
-      {:ok, {trigger_chat_id, trigger_msg_id}} ->
+      {:ok, trigger_msg_id} ->
         {:ok, _} =
-          ExGram.forward_message(trigger_chat_id, trigger_chat_id, trigger_msg_id, bot: @bot)
+          ExGram.forward_message(id, id, trigger_msg_id, bot: @bot)
 
       {:error, _} ->
         nil

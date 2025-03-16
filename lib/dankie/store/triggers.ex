@@ -23,7 +23,7 @@ defmodule Dankie.Store.Triggers do
   @spec store_trigger(Regex.t(), integer(), integer()) :: :ok | {:error, term()}
   def store_trigger(new_trigger, chat_id, msg_id) do
     with {:ok, table_name} <- open_chat_table(chat_id),
-         :ok <- :dets.insert(table_name, {new_trigger, {chat_id, msg_id}}),
+         :ok <- :dets.insert(table_name, {new_trigger, msg_id}),
          :ok <- :dets.close(table_name) do
       :ok
     else
@@ -49,6 +49,17 @@ defmodule Dankie.Store.Triggers do
         )
 
         err
+    end
+  end
+
+  def delete_trigger(regex, chat_id) do
+    with {:ok, table_name} <- open_chat_table(chat_id) do
+      :dets.delete(table_name, regex)
+    else
+      err ->
+        Logger.error(
+          "Error while trying to delete a trigger: #{inspect(err)}, parameters: #{regex}, #{chat_id}"
+        )
     end
   end
 end
