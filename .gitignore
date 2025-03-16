@@ -26,3 +26,5 @@ dankie-*.tar
 /tmp/
 
 store
+
+.direnv
