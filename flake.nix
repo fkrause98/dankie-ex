@@ -5,12 +5,17 @@
 
   outputs = { self, nixpkgs }:
     let
-      supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
-      forEachSupportedSystem = f: nixpkgs.lib.genAttrs supportedSystems (system: f {
-        pkgs = import nixpkgs { inherit system; overlays = [ self.overlays.default ]; };
-      });
-    in
-    {
+      supportedSystems =
+        [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
+      forEachSupportedSystem = f:
+        nixpkgs.lib.genAttrs supportedSystems (system:
+          f {
+            pkgs = import nixpkgs {
+              inherit system;
+              overlays = [ self.overlays.default ];
+            };
+          });
+    in {
       overlays.default = final: prev: rec {
         # documentation
         # https://nixos.org/manual/nixpkgs/stable/#sec-beam
@@ -51,30 +56,28 @@
 
       devShells = forEachSupportedSystem ({ pkgs }: {
         default = pkgs.mkShell {
-          packages = with pkgs; [
-            # use the Elixr/OTP versions defined above; will also install OTP, mix, hex, rebar3
-            elixir
+          packages = with pkgs;
+            [
+              # use the Elixr/OTP versions defined above; will also install OTP, mix, hex, rebar3
+              elixir
 
-            # mix needs it for downloading dependencies
-            git
+              # mix needs it for downloading dependencies
+              git
 
-            # probably needed for your Phoenix assets
-            nodejs_20
-          ]
-          ++
-          # Linux only
-          pkgs.lib.optionals pkgs.stdenv.isLinux (with pkgs; [
-            gigalixir
-            inotify-tools
-            libnotify
-          ])
-          ++
-          # macOS only
-          pkgs.lib.optionals pkgs.stdenv.isDarwin (with pkgs; [
-            terminal-notifier
-            darwin.apple_sdk.frameworks.CoreFoundation
-            darwin.apple_sdk.frameworks.CoreServices
-          ]);
+              # probably needed for your Phoenix assets
+              nodejs_20
+
+              direnv
+            ] ++
+            # Linux only
+            pkgs.lib.optionals pkgs.stdenv.isLinux
+            (with pkgs; [ gigalixir inotify-tools libnotify ]) ++
+            # macOS only
+            pkgs.lib.optionals pkgs.stdenv.isDarwin (with pkgs; [
+              terminal-notifier
+              darwin.apple_sdk.frameworks.CoreFoundation
+              darwin.apple_sdk.frameworks.CoreServices
+            ]);
         };
       });
     };

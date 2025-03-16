@@ -1,21 +1,22 @@
 # Dankie
 
-**TODO: Add description**
+## Setup
 
-## Installation
-
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `dankie` to your list of dependencies in `mix.exs`:
-
-```elixir
-def deps do
-  [
-    {:dankie, "~> 0.1.0"}
-  ]
-end
+1. Install nix:
+```bash
+curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | \
+  sh -s -- install
 ```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/dankie>.
-
+2. (Install direnv)[https://direnv.net/docs/installation.html] and run the following inside the root folder
+```bash
+direnv allow .
+```
+3. Get a token from the (BotFather)[https://telegram.me/BotFather]
+4. Set this token as an env var:
+```bash
+export BOT_TOKEN=<your-token>
+```
+5. Now you can start the bot with a repl:
+```bash
+iex -S mix
+```
