@@ -2,6 +2,7 @@ defmodule Dankie.Bot do
   @bot :dankie
   require Logger
   alias ExGram.Model.{BotCommand, Message, Chat}
+  alias Dankie.Troesmas
 
   use ExGram.Bot,
     name: @bot,
@@ -83,11 +84,20 @@ defmodule Dankie.Bot do
     Logger.info("Unknown comand #{unknown} received, ignoring...")
   end
 
-  def handle({:text, text, _msg = %Message{chat: %Chat{id: id}}}, _context) do
-    case Dankie.Triggers.check_trigger_match(text, id) do
+  def handle({:text, text, msg = %Message{chat: chat}}, context) do
+    # Check if we have to dispatch 'La Pole'
+    if Dankie.Pole.should_congratulate?(chat.id) do
+      ExGram.send_message(
+        chat.id,
+        "@#{msg.from.username} ganastes la pole negri, bien ahí",
+        bot: @bot
+      )
+    end
+
+    case Dankie.Triggers.check_trigger_match(text, chat.id) do
       {:ok, trigger_msg_id} ->
         {:ok, _} =
-          ExGram.copy_message(id, id, trigger_msg_id, bot: @bot, caption: "")
+          ExGram.copy_message(chat.id, chat.id, trigger_msg_id, bot: @bot, caption: "")
 
       {:error, _} ->
         nil

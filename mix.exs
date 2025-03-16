@@ -28,7 +28,9 @@ defmodule Dankie.MixProject do
       {:plug, "~> 1.16"},
       {:ex_gram, "~> 0.53"},
       {:plug_cowboy, "~> 2.0"},
-      {:new_relic_agent, "~> 1.0"}
+      {:new_relic_agent, "~> 1.0"},
+      {:quantum, "~> 3.0"},
+      {:tzdata, "~> 1.1"}
     ]
   end
 end
