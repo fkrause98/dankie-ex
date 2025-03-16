@@ -14,3 +14,5 @@ config :logger, :default_handler,
     max_no_files: 5,
     compress_on_rotate: true
   ]
+
+config :new_relic_agent, logs_in_context: :forwarder
