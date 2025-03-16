@@ -63,7 +63,7 @@ defmodule Dankie.Bot do
     case Dankie.Triggers.check_trigger_match(text, id) do
       {:ok, trigger_msg_id} ->
         {:ok, _} =
-          ExGram.forward_message(id, id, trigger_msg_id, bot: @bot)
+          ExGram.copy_message(id, id, trigger_msg_id, bot: @bot, caption: "")
 
       {:error, _} ->
         nil
