@@ -55,6 +55,30 @@ defmodule Dankie.Bot do
     )
   end
 
+  def handle({:command, "ruleta", msg = %Message{chat: %Chat{id: id}}}, context) do
+    case Dankie.Ruleta.Supervisor.advance_game(id) do
+      {:error, :game_not_found} ->
+        {:ok, _pid} = Dankie.Ruleta.Supervisor.new_game(id)
+
+        answer(
+          context,
+          "Bala cargada, sale un jueguito?"
+        )
+
+      :empty ->
+        answer(
+          context,
+          "💦🔫 Te salvaste esta vez. Que pruebe otro."
+        )
+
+      :shoot ->
+        answer(
+          context,
+          "💥🔫 Se re-regaló."
+        )
+    end
+  end
+
   def handle({:command, unknown, _update}, _context) do
     Logger.info("Unknown comand #{unknown} received, ignoring...")
   end
