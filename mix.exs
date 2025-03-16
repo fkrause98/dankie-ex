@@ -28,8 +28,7 @@ defmodule Dankie.MixProject do
       {:plug, "~> 1.16"},
       {:ex_gram, "~> 0.53"},
       {:plug_cowboy, "~> 2.0"},
-      {:new_relic_agent, "~> 1.0"},
-      {:fsmx, "~> 0.5.0"}
+      {:new_relic_agent, "~> 1.0"}
     ]
   end
 end
