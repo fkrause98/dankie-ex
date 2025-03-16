@@ -25,7 +25,6 @@ dankie-*.tar
 # Temporary files, for example, from tests.
 /tmp/
 
-store
-./store
+/store/
 
 .direnv
