@@ -70,7 +70,7 @@ defmodule Dankie.Bot do
     end
   end
 
-  def handle(unknown = {_, _, _}, _context) do
+  def handle(unknown_update, _context) do
     Logger.info("Unknown update received, ignoring. Content is: #{inspect(unknown)} ")
   end
 end
