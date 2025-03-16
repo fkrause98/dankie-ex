@@ -11,8 +11,8 @@ defmodule Dankie.Triggers do
     msg_id = reply.message_id
 
     case check_regex(new_trigger) do
-      {:ok, regex} ->
-        :ok = Dankie.Store.Triggers.store_trigger(regex, chat_id, msg_id)
+      {:ok, _regex} ->
+        :ok = Dankie.Store.Triggers.store_trigger(new_trigger, chat_id, msg_id)
         {:ok, troesmizar("Agregado el trigger")}
 
       {:error, {reason, position}} ->
@@ -37,16 +37,18 @@ defmodule Dankie.Triggers do
 
   # @spec check_trigger_match(String.t(), Int.t()) :: {:ok, String.t()} | {:error, :no_match}
   def check_trigger_match(text, chat_id) when is_binary(text) and is_number(chat_id) do
-    regex_matching_fun = fn
-      {pattern, msg_id} ->
-        if Regex.match?(pattern, text) do
-          {:done, msg_id}
-        else
-          :continue
-        end
+    regex_matching_fun = fn {pattern, msg_id} ->
+      case Regex.compile(pattern) do
+        {:ok, regex} ->
+          if Regex.match?(regex, text) do
+            {:done, msg_id}
+          else
+            :continue
+          end
 
-      _ ->
-        :continue
+        _ ->
+          :continue
+      end
     end
 
     {:ok, lookup_result} =
@@ -60,10 +62,10 @@ defmodule Dankie.Triggers do
 
   def delete_trigger(%{text: to_delete, chat: %{id: chat_id}}) do
     case Regex.compile(to_delete) do
-      {:ok, regex} ->
+      {:ok, _regex} ->
         # TODO: Fijarse que el trigger exista antes y
         # dar una respuesta en base a eso.
-        case Dankie.Store.Triggers.delete_trigger(regex, chat_id) do
+        case Dankie.Store.Triggers.delete_trigger(to_delete, chat_id) do
           :ok ->
             {:ok, troesmizar("Borrado")}
 

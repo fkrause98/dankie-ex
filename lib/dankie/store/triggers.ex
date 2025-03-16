@@ -20,7 +20,7 @@ defmodule Dankie.Store.Triggers do
     :dets.open_file(table_name, file: table_path)
   end
 
-  @spec store_trigger(Regex.t(), integer(), integer()) :: :ok | {:error, term()}
+  @spec store_trigger(String.t(), integer(), integer()) :: :ok | {:error, term()}
   def store_trigger(new_trigger, chat_id, msg_id) do
     with {:ok, table_name} <- open_chat_table(chat_id),
          :ok <- :dets.insert(table_name, {new_trigger, msg_id}),
