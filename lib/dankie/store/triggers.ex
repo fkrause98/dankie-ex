@@ -72,7 +72,7 @@ defmodule Dankie.Store.Triggers do
   The given function (traverse_fun) will iterate over each key-value pair
   under the matching table for chat_id
   """
-  @spec traverse_triggers_table(integer(), function()) :: :ok | {:error, term()}
+  @spec traverse_triggers_table(integer(), function()) :: {:ok, list()} | {:error, term()}
   def traverse_triggers_table(chat_id, traverse_fun) when is_function(traverse_fun) do
     with {:ok, table_name} <- open_chat_table(chat_id),
          traverse_result <- :dets.traverse(table_name, traverse_fun),
@@ -96,6 +96,7 @@ defmodule Dankie.Store.Triggers do
   def delete_trigger(regex, chat_id) do
     with {:ok, table_name} <- open_chat_table(chat_id) do
       :dets.delete(table_name, regex)
+      :dets.close(table_name)
     else
       err ->
         Logger.error(

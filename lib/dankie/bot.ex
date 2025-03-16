@@ -39,8 +39,8 @@ defmodule Dankie.Bot do
     # answer(context, Enum.join(state, "\n"))
   end
 
-  def handle({:command, "borrar", update}, context) do
-    {:ok, res} = Dankie.Triggers.delete_trigger(update)
+  def handle({:command, "borrar", msg = %Message{}}, context) do
+    {:ok, res} = Dankie.Triggers.delete_trigger(msg)
     answer(context, res)
   end
 

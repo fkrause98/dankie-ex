@@ -1,9 +1,15 @@
 defmodule Dankie.Triggers do
   import Dankie.Troesmas
+  alias ExGram.Model.Message
 
-  def add_trigger(%{text: ""}), do: {:ok, troesmizar("Me tenés que pasar un texto")}
+  @spec add_trigger(Update.t()) :: {:ok, binary()} | {:error, binary()}
+  @doc """
+  Receives an update message for a new trigger, checks the given regex
+  is valid, and responds accordingly.
+  """
+  def add_trigger(%Message{text: ""}), do: {:ok, troesmizar("Me tenés que pasar un texto")}
 
-  def add_trigger(%{
+  def add_trigger(%Message{
         text: new_trigger,
         reply_to_message: reply = %ExGram.Model.Message{}
       }) do
@@ -35,7 +41,14 @@ defmodule Dankie.Triggers do
     Regex.compile(regex)
   end
 
-  # @spec check_trigger_match(String.t(), Int.t()) :: {:ok, String.t()} | {:error, :no_match}
+  @spec check_trigger_match(String.t(), Int.t()) :: {:ok, String.t()} | {:error, :no_match}
+  @doc """
+  Receives a text update and tries to retrieve a matching regex
+  for the given text message, if it exists.
+
+  The main logic here is under 'regex_matching_fun', which is then
+  used to traverse the table for this chat id.
+  """
   def check_trigger_match(text, chat_id) when is_binary(text) and is_number(chat_id) do
     regex_matching_fun = fn {pattern, msg_id} ->
       case Regex.compile(pattern) do
@@ -60,7 +73,12 @@ defmodule Dankie.Triggers do
     end
   end
 
-  def delete_trigger(%{text: to_delete, chat: %{id: chat_id}}) do
+  @spec delete_trigger(Message.t()) :: {:ok, String.t()} | {:error, :no_match}
+  @doc """
+  Takes a request message to delete a certain regex, and deletes it from
+  the storage.
+  """
+  def delete_trigger(%Message{text: to_delete, chat: %{id: chat_id}}) do
     case Regex.compile(to_delete) do
       {:ok, _regex} ->
         # TODO: Fijarse que el trigger exista antes y
