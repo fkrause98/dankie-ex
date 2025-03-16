@@ -20,3 +20,7 @@ export BOT_TOKEN=<your-token>
 ```bash
 iex -S mix
 ```
+## Deploy
+1. Follow the steps 1, 2, 3 and 4 from above.
+2. Generate a release with `mix deps.get && MIX_ENV=prod mix env release` and follow the
+   steps to start the bot.
