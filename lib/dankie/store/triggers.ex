@@ -17,7 +17,6 @@ defmodule Dankie.Store.Triggers do
   is a seriously naive implementation, and I think we can do
   better, so we should explore some other options if
   the bot starts to react slowly to incoming messages.
-
   """
 
   # Given a chat id, returns the name for its existing or

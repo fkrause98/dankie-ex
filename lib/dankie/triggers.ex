@@ -95,4 +95,20 @@ defmodule Dankie.Triggers do
         {:ok, troesmizar("Eso no es un regex ni en pedo")}
     end
   end
+
+  def list_triggers(%Message{chat: %{id: chat_id}}) do
+    triggers = []
+    trigger_accumulator = fn {trigger_text, _} -> {:continue, [trigger_text | triggers]} end
+
+    case Dankie.Store.Triggers.traverse_triggers_table(chat_id, trigger_accumulator) do
+      {:ok, triggers} ->
+        response = Enum.join(["Triggers conocidos: " | triggers], "\n")
+
+        {:ok, response}
+
+      # We already log errors on traverse_triggers_table
+      {:error, _} ->
+        {:ok, troesmizar("Intentá más tarde")}
+    end
+  end
 end

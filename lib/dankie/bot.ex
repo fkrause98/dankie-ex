@@ -34,9 +34,9 @@ defmodule Dankie.Bot do
     answer(context, response)
   end
 
-  def handle({:command, "listar", msg}, context) do
-    # state = GenServer.call(Dankie.Agregar, {:listar, msg, context})
-    # answer(context, Enum.join(state, "\n"))
+  def handle({:command, "listar", msg = %Message{}}, context) do
+    {:ok, response} = Dankie.Triggers.list_triggers(msg)
+    answer(context, response)
   end
 
   def handle({:command, "borrar", msg = %Message{}}, context) do
