@@ -1,7 +1,7 @@
 defmodule Dankie.Bot do
   @bot :dankie
   require Logger
-  alias ExGram.Model.{BotCommand, Update}
+  alias ExGram.Model.{BotCommand, Message, Chat}
 
   use ExGram.Bot,
     name: @bot,
@@ -25,7 +25,7 @@ defmodule Dankie.Bot do
     :ok
   end
 
-  def handle({:command, :start, msg}, context) do
+  def handle({:command, :start, _msg}, context) do
     answer(context, "Hi!")
   end
 
@@ -39,7 +39,7 @@ defmodule Dankie.Bot do
     answer(context, Enum.join(state, "\n"))
   end
 
-  def handle({:command, "dolar", msg}, context) do
+  def handle({:command, "dolar", _msg}, context) do
     response =
       Dankie.Dolar.fetch_data()
       |> Dankie.Dolar.prepare_msg_text()
@@ -54,10 +54,8 @@ defmodule Dankie.Bot do
     Logger.info("Unknown comand #{unknown} received, ignoring...")
   end
 
-  def handle({:text, text, _msg}, _context) do
-    Logger.info("RECEIVED TEXT: #{text}")
-
-    case Dankie.Triggers.check_trigger_match(text) do
+  def handle({:text, text, _msg = %Message{chat: %Chat{id: id}}}, _context) do
+    case Dankie.Triggers.check_trigger_match(text, id) do
       {:ok, {trigger_chat_id, trigger_msg_id}} ->
         {:ok, _} =
           ExGram.forward_message(trigger_chat_id, trigger_chat_id, trigger_msg_id, bot: @bot)
@@ -67,7 +65,7 @@ defmodule Dankie.Bot do
     end
   end
 
-  def handle({update, _, _}, _context) do
-    Logger.info("Unknown update of type #{update} received, ignoring...")
+  def handle(unknown = {_, _, _}, _context) do
+    Logger.info("Unknown update received, ignoring. Content is: #{inspect(unknown)} ")
   end
 end

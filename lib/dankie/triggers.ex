@@ -1,6 +1,5 @@
 defmodule Dankie.Triggers do
   import Dankie.Troesmas
-  @triggers_table :triggers_table
 
   def add_trigger(%{text: ""}), do: {:ok, troesmizar("Me tenés que pasar un texto")}
 
@@ -13,9 +12,7 @@ defmodule Dankie.Triggers do
 
     case check_regex(new_trigger) do
       {:ok, _regex} ->
-        {:ok, @triggers_table} = :dets.open_file(@triggers_table, [])
-        :dets.insert(@triggers_table, {new_trigger, {chat_id, msg_id}})
-        :dets.close(@triggers_table)
+        :ok = Dankie.Store.Triggers.store_trigger(new_trigger, chat_id, msg_id)
         {:ok, troesmizar("Agregado el trigger")}
 
       {:error, {reason, position}} ->
@@ -38,27 +35,23 @@ defmodule Dankie.Triggers do
     Regex.compile(regex)
   end
 
-  @spec check_trigger_match(String.t()) :: {:ok, String.t()} | {:error, :no_match}
-  def check_trigger_match(text) when is_binary(text) do
-    {:ok, @triggers_table} = :dets.open_file(@triggers_table, [])
-
-    result =
-      :dets.traverse(@triggers_table, fn {pattern, trigger_text} ->
-        case Regex.compile(pattern) do
-          {:ok, regex} ->
-            if Regex.match?(regex, text) do
-              # Return response and stop traversing
-              {:done, trigger_text}
-            else
-              :continue
-            end
-
-          _ ->
+  @spec check_trigger_match(String.t(), Int.t()) :: {:ok, String.t()} | {:error, :no_match}
+  def check_trigger_match(text, chat_id) when is_binary(text) and is_number(chat_id) do
+    regex_matching_fun = fn {pattern, trigger_text} ->
+      case Regex.compile(pattern) do
+        {:ok, regex} ->
+          if Regex.match?(regex, text) do
+            {:done, trigger_text}
+          else
             :continue
-        end
-      end)
+          end
 
-    :dets.close(@triggers_table)
+        _ ->
+          :continue
+      end
+    end
+
+    result = Dankie.Store.Triggers.traverse_triggers_table(chat_id, regex_matching_fun)
 
     case result do
       [{trigger_chat_id, trigger_msg_id} | _] -> {:ok, {trigger_chat_id, trigger_msg_id}}

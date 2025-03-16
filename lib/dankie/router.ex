@@ -1,9 +1,9 @@
-defmodule Dankie.Router do
-  use Plug.Router
+# defmodule Dankie.Router do
+#   use Plug.Router
 
-  plug(ExGram.Plug)
+#   plug(ExGram.Plug)
 
-  match "/" do
-    send_resp(404)
-  end
-end
+#   match "/" do
+#     send_resp(404)
+#   end
+# end
