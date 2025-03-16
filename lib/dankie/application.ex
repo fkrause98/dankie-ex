@@ -19,8 +19,7 @@ defmodule Dankie.Application do
          token: System.fetch_env!("BOT_TOKEN")
        ]},
       Dankie.Pole,
-      Dankie.Ruleta.Supervisor,
-      Dankie.Scheduler
+      Dankie.Ruleta.Supervisor
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
