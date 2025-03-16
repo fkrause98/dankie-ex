@@ -1,3 +1,5 @@
+import Config
+config :tesla, Tesla.Middleware.Logger, debug: false
 config :logger, level: :info
 
 config :logger, :default_formatter,
