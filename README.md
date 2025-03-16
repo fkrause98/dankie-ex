@@ -7,11 +7,11 @@
 curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | \
   sh -s -- install
 ```
-2. (Install direnv)[https://direnv.net/docs/installation.html] and run the following inside the root folder
+2. [Install direnv](https://direnv.net/docs/installation.html) and run the following inside the root folder
 ```bash
 direnv allow .
 ```
-3. Get a token from the (BotFather)[https://telegram.me/BotFather]
+3. Get a token from the [BotFather](https://telegram.me/BotFather)
 4. Set this token as an env var:
 ```bash
 export BOT_TOKEN=<your-token>
