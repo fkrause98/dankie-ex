@@ -3,10 +3,6 @@ defmodule Dankie.Triggers do
   alias ExGram.Model.Message
 
   @spec add_trigger(Update.t()) :: {:ok, binary()} | {:error, binary()}
-  @doc """
-  Receives an update message for a new trigger, checks the given regex
-  is valid, and responds accordingly.
-  """
   def add_trigger(%Message{text: ""}), do: {:ok, troesmizar("Me tenés que pasar un texto")}
 
   def add_trigger(%Message{
@@ -41,14 +37,7 @@ defmodule Dankie.Triggers do
     Regex.compile(regex)
   end
 
-  @spec check_trigger_match(String.t(), Int.t()) :: {:ok, String.t()} | {:error, :no_match}
-  @doc """
-  Receives a text update and tries to retrieve a matching regex
-  for the given text message, if it exists.
-
-  The main logic here is under 'regex_matching_fun', which is then
-  used to traverse the table for this chat id.
-  """
+  @spec check_trigger_match(String.t(), integer()) :: {:ok, integer()} | {:error, :no_match}
   def check_trigger_match(text, chat_id) when is_binary(text) and is_number(chat_id) do
     regex_matching_fun = fn {pattern, msg_id} ->
       case Regex.compile(pattern) do
@@ -64,25 +53,16 @@ defmodule Dankie.Triggers do
       end
     end
 
-    {:ok, lookup_result} =
-      Dankie.Store.Triggers.traverse_triggers_table(chat_id, regex_matching_fun)
-
-    case lookup_result do
-      [trigger_msg_id | _] -> {:ok, trigger_msg_id}
+    case Dankie.Store.Triggers.traverse_triggers_table(chat_id, regex_matching_fun) do
+      {:ok, [trigger_msg_id | _]} -> {:ok, trigger_msg_id}
       _ -> {:error, :no_match}
     end
   end
 
   @spec delete_trigger(Message.t()) :: {:ok, String.t()} | {:error, :no_match}
-  @doc """
-  Takes a request message to delete a certain regex, and deletes it from
-  the storage.
-  """
   def delete_trigger(%Message{text: to_delete, chat: %{id: chat_id}}) do
     case Regex.compile(to_delete) do
       {:ok, _regex} ->
-        # TODO: Fijarse que el trigger exista antes y
-        # dar una respuesta en base a eso.
         case Dankie.Store.Triggers.delete_trigger(to_delete, chat_id) do
           :ok ->
             {:ok, troesmizar("Borrado")}
@@ -97,22 +77,19 @@ defmodule Dankie.Triggers do
   end
 
   @spec list_triggers(Message.t()) :: {:ok, String.t()} | {:error, String.t()}
-  @doc """
-  Returns a string with all the known triggers for a given chat.
-  """
   def list_triggers(%Message{chat: %{id: chat_id}}) do
-    triggers = []
-    trigger_accumulator = fn {trigger_text, _} -> {:continue, [trigger_text | triggers]} end
+    case Dankie.Store.Triggers.traverse_triggers_table(chat_id, &trigger_accumulator/1) do
+      {:ok, []} ->
+        {:ok, troesmizar("No hay triggers todavía")}
 
-    case Dankie.Store.Triggers.traverse_triggers_table(chat_id, trigger_accumulator) do
       {:ok, triggers} ->
-        response = Enum.join(["Triggers conocidos: " | triggers], "\n")
-
+        response = "Triggers conocidos:\n" <> Enum.join(triggers, "\n")
         {:ok, response}
 
-      # We already log errors on traverse_triggers_table
       {:error, _} ->
         {:ok, troesmizar("Intentá más tarde")}
     end
   end
+
+  defp trigger_accumulator({trigger_text, _}), do: {:done, trigger_text}
 end

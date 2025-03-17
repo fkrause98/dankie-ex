@@ -3,104 +3,112 @@ defmodule Dankie.Store.Triggers do
   @triggers_table_prefix "chat_trigger_table"
 
   @moduledoc """
-  Module to interface between triggers logic
-  and the tables that store the regexes.
-
-  The idea here is that we have a table for each chat_id,
-  to make sure we don't mix up triggers of different chats.
-
-  Think of the underlying table storage as a mapping of the form
-  TriggerText -> MessageId. So, when we want to retrieve triggers
-  for a message, we open the table for the chat id that we need,
-  and check if one of the existing triggers matches and then
-  we make the bot forward the found message id. This
-  is a seriously naive implementation, and I think we can do
-  better, so we should explore some other options if
-  the bot starts to react slowly to incoming messages.
+  Module to interface between triggers logic and RocksDB storage.
+  Each chat has its own RocksDB instance to store triggers as key-value pairs
+  where the key is the trigger text and the value is the associated message ID.
   """
 
-  # Given a chat id, returns the name for its existing or
-  # to-be-created table path.
-  @spec table_path_for_chat_id(integer()) :: charlist()
-  defp table_path_for_chat_id(chat_id),
-    do: ~c"./store/#{@triggers_table_prefix}_#{chat_id}"
+  @spec db_path_for_chat_id(integer()) :: String.t()
+  defp db_path_for_chat_id(chat_id),
+    do: "./store/#{@triggers_table_prefix}_#{chat_id}"
 
-  # Given a chat id, returns the name for its existing or
-  # to-be-created table.
-  @spec table_name_for_chat_id(integer()) :: charlist()
-  defp table_name_for_chat_id(chat_id),
-    do: ~c"#{@triggers_table_prefix}_#{chat_id}"
+  defp db_options do
+    [
+      create_if_missing: true,
+      paranoid_checks: true
+    ]
+  end
 
-  # Given a chat id, return the handle for the table it
-  # corresponds to.
-  @spec open_chat_table(integer()) :: {:ok, binary() | atom} | {:err, term()}
-  defp open_chat_table(chat_id) do
-    table_path =
-      chat_id
-      |> table_path_for_chat_id
+  @spec open_chat_db(integer()) :: {:ok, reference()} | {:error, term()}
+  defp open_chat_db(chat_id) do
+    db_path = chat_id |> db_path_for_chat_id
+    File.mkdir_p!(Path.dirname(db_path))
 
-    table_name =
-      chat_id
-      |> table_name_for_chat_id
-
-    :dets.open_file(table_name, file: table_path)
+    db_path
+    |> String.to_charlist()
+    |> :rocksdb.open(db_options())
   end
 
   @doc """
-  This function will store in the table that matches the given chat_id
-  key-value pair which will have as a key the new trigger and as value
-  the message id.
+  Stores a trigger in the chat's RocksDB database.
   """
   @spec store_trigger(String.t(), integer(), integer()) :: :ok | {:error, term()}
   def store_trigger(new_trigger, chat_id, msg_id) do
-    with {:ok, table_name} <- open_chat_table(chat_id),
-         :ok <- :dets.insert(table_name, {new_trigger, msg_id}),
-         :ok <- :dets.close(table_name) do
-      :ok
-    else
-      err ->
-        Logger.error(
-          "Could not add trigger! Got error: #{inspect(err)}, parameters: #{new_trigger}, #{chat_id}, #{msg_id}"
-        )
+    case open_chat_db(chat_id) do
+      {:ok, db} ->
+        try do
+          encoded = :erlang.term_to_binary(msg_id)
+          :rocksdb.put(db, new_trigger, encoded, [])
+        after
+          :rocksdb.close(db)
+        end
 
-        err
+      error ->
+        log_error(error, "store_trigger", [new_trigger, chat_id, msg_id])
+        error
     end
   end
 
   @doc """
-  The given function (traverse_fun) will iterate over each key-value pair
-  under the matching table for chat_id
+  Iterates over all triggers in a chat's database, applying the given function.
   """
   @spec traverse_triggers_table(integer(), function()) :: {:ok, list()} | {:error, term()}
   def traverse_triggers_table(chat_id, traverse_fun) when is_function(traverse_fun) do
-    with {:ok, table_name} <- open_chat_table(chat_id),
-         traverse_result <- :dets.traverse(table_name, traverse_fun),
-         :ok <- :dets.close(table_name) do
-      {:ok, traverse_result}
+    with {:ok, db} <- open_chat_db(chat_id),
+         {:ok, iterator} <- :rocksdb.iterator(db, []) do
+      results = iterate_and_apply(iterator, traverse_fun, :first, [])
+      :rocksdb.iterator_close(iterator)
+      :rocksdb.close(db)
+      {:ok, results}
     else
-      err ->
-        Logger.error(
-          "Error while traversing trigger table: #{inspect(err)}, for chat id: #{chat_id}"
-        )
+      error ->
+        log_error(error, "traverse_triggers_table", [chat_id])
+        error
+    end
+  end
 
-        err
+  defp iterate_and_apply(iterator, fun, action, acc) do
+    case :rocksdb.iterator_move(iterator, action) do
+      {:ok, key, value_bin} ->
+        value = :erlang.binary_to_term(value_bin)
+
+        case fun.({key, value}) do
+          :continue ->
+            iterate_and_apply(iterator, fun, :next, acc)
+
+          {:done, result} ->
+            iterate_and_apply(iterator, fun, :next, [result | acc])
+        end
+
+      {:error, :invalid_iterator} ->
+        Enum.reverse(acc)
+
+      error ->
+        Logger.error("Iteration error: #{inspect(error)}")
+        Enum.reverse(acc)
     end
   end
 
   @doc """
-  This function will delete the key-value pair that matches
-  the given string, under the table for this chat_id.
+  Deletes a trigger from the chat's database.
   """
   @spec delete_trigger(String.t(), integer()) :: :ok | {:error, term()}
   def delete_trigger(regex, chat_id) do
-    with {:ok, table_name} <- open_chat_table(chat_id) do
-      :dets.delete(table_name, regex)
-      :dets.close(table_name)
-    else
-      err ->
-        Logger.error(
-          "Error while trying to delete a trigger: #{inspect(err)}, parameters: #{regex}, #{chat_id}"
-        )
+    case open_chat_db(chat_id) do
+      {:ok, db} ->
+        try do
+          :rocksdb.delete(db, regex, [])
+        after
+          :rocksdb.close(db)
+        end
+
+      error ->
+        log_error(error, "delete_trigger", [regex, chat_id])
+        error
     end
+  end
+
+  defp log_error(error, function, params) do
+    Logger.error("Error in #{function}: #{inspect(error)}, Params: #{inspect(params)}")
   end
 end

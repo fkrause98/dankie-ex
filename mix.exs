@@ -31,7 +31,7 @@ defmodule Dankie.MixProject do
       {:new_relic_agent, "~> 1.0"},
       {:quantum, "~> 3.0"},
       {:tzdata, "~> 1.1"},
-      {:cubdb, "~> 2.0.2"}
+      {:rocksdb, "~> 1.0"}
     ]
   end
 end
