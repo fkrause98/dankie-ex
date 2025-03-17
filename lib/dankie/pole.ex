@@ -1,34 +1,46 @@
 defmodule Dankie.Pole do
-  use Agent
-
+  use GenServer
   @timezone "America/Argentina/Buenos_Aires"
 
+  alias Dankie.Pole.Storage
+
   def start_link(_opts) do
-    Agent.start_link(fn -> %{} end, name: __MODULE__)
+    GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
 
-  @doc """
-  Checks if the chat should be congratulated for the first message of the day.
-  """
   def should_congratulate?(chat_id) do
     {:ok, now} = DateTime.now(@timezone)
     today = DateTime.to_date(now)
 
-    Agent.get_and_update(__MODULE__, fn state ->
-      case state[chat_id] do
-        ^today ->
-          {false, state}
+    case Storage.get_date(chat_id) do
+      ^today ->
+        :already_done
 
-        _ ->
-          {true, Map.put(state, chat_id, today)}
-      end
-    end)
+      _ ->
+        Storage.store_date(chat_id, today)
+        :ok
+    end
   end
 
-  @doc """
-  Resets the state (for testing or manual resets).
-  """
+  def record_winner(chat_id, user_id) do
+    GenServer.cast(__MODULE__, {:record_win, chat_id, user_id})
+  end
+
+  def get_leaderboard(chat_id) do
+    Storage.get_leaderboard(chat_id)
+  end
+
   def reset_state do
-    Agent.update(__MODULE__, fn _ -> %{} end)
+    Storage.reset_all()
+  end
+
+  def init(_) do
+    Storage.start_link()
+    {:ok, %{}}
+  end
+
+  def handle_cast({:record_win, chat_id, user_id}, state) do
+    Storage.update_leaderboard(chat_id, user_id)
+    {:noreply, state}
   end
 end

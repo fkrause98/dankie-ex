@@ -10,7 +10,7 @@ defmodule Dankie.Store.Triggers do
 
   @spec db_path_for_chat_id(integer()) :: String.t()
   defp db_path_for_chat_id(chat_id),
-    do: "./store/#{@triggers_table_prefix}_#{chat_id}"
+    do: "./store/#{Mix.env()}/#{@triggers_table_prefix}_#{chat_id}"
 
   defp db_options do
     [
