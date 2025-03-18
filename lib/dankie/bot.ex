@@ -89,6 +89,16 @@ defmodule Dankie.Bot do
     end
   end
 
+  def handle({:command, "gatito", msg = %Message{chat: chat}}, context) do
+    case Dankie.Gatitos.random_cat() do
+      {:ok, image_path} ->
+        ExGram.send_photo(chat.id, {:file, image_path}, bot: @bot)
+
+      _err ->
+        answer(context, Troesmas.troesmizar("Mmmm, no encontré ningún gatito, intená más tarde"))
+    end
+  end
+
   def handle({:command, unknown, _update}, _context) do
     Logger.info("Unknown comand #{unknown} received, ignoring...")
   end
