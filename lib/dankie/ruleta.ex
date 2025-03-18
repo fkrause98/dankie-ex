@@ -1,38 +1,45 @@
-defmodule Dankie.Ruleta.Supervisor do
-  use DynamicSupervisor
-
-  def start_link(init_arg) do
-    DynamicSupervisor.start_link(__MODULE__, init_arg, name: __MODULE__)
+defmodule Dankie.Ruleta do
+  def child_spec(opts) do
+    %{
+      id: __MODULE__,
+      start: {__MODULE__, :start_link, []},
+      type: :worker,
+      restart: :permanent,
+      shutdown: 500
+    }
   end
 
-  @impl true
-  def init(_init_arg) do
-    DynamicSupervisor.init(strategy: :one_for_one)
+  def start_link do
+    Registry.start_link(keys: :unique, name: Dankie.Ruleta.Registry)
   end
 
   def new_game(chat_id) do
-    child_spec = {Dankie.Ruleta.Instance, chat_id}
-    DynamicSupervisor.start_child(__MODULE__, child_spec)
+    case GenServer.start_link(__MODULE__, chat_id, name: via_tuple(chat_id)) do
+      {:ok, pid} -> {:ok, pid}
+      {:error, {:already_started, pid}} -> {:ok, pid}
+      error -> error
+    end
   end
 
   def advance_game(chat_id) do
-    case :global.whereis_name(chat_id) do
-      :undefined ->
-        {:error, :game_not_found}
-
-      pid ->
-        GenServer.call(pid, :pull_trigger)
+    case lookup_game(chat_id) do
+      nil -> {:error, :game_not_found}
+      pid -> GenServer.call(pid, :pull_trigger)
     end
   end
-end
 
-defmodule Dankie.Ruleta.Instance do
-  use GenServer
-
-  def start_link(chat_id) do
-    GenServer.start_link(__MODULE__, chat_id, name: {:global, chat_id})
+  defp via_tuple(chat_id) do
+    {:via, Registry, {Dankie.Ruleta.Registry, chat_id}}
   end
 
+  defp lookup_game(chat_id) do
+    case Registry.lookup(Dankie.Ruleta.Registry, chat_id) do
+      [{pid, _}] -> pid
+      [] -> nil
+    end
+  end
+
+  # Server callbacks
   @impl true
   def init(chat_id) do
     five_empties = for n <- [1, 2, 3, 4, 5], do: :empty
@@ -46,7 +53,7 @@ defmodule Dankie.Ruleta.Instance do
   end
 
   @impl true
-  def handle_call(:pull_trigger, _from, %{state: [:shoot | rest]} = game_state) do
-    {:stop, :finished, :shoot, %{}}
+  def handle_call(:pull_trigger, _from, %{state: [:shoot | _rest]} = _game_state) do
+    {:stop, :normal, :shoot, %{}}
   end
 end

@@ -18,7 +18,7 @@ defmodule Dankie.Application do
          method: :polling,
          token: System.fetch_env!("BOT_TOKEN")
        ]},
-      Dankie.Ruleta.Supervisor
+      Dankie.Ruleta
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

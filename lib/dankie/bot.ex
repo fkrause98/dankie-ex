@@ -66,9 +66,9 @@ defmodule Dankie.Bot do
   end
 
   def handle({:command, "ruleta", msg = %Message{chat: %Chat{id: id}}}, context) do
-    case Dankie.Ruleta.Supervisor.advance_game(id) do
+    case Dankie.Ruleta.advance_game(id) do
       {:error, :game_not_found} ->
-        {:ok, _pid} = Dankie.Ruleta.Supervisor.new_game(id)
+        {:ok, _pid} = Dankie.Ruleta.new_game(id)
 
         answer(
           context,
