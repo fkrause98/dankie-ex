@@ -54,7 +54,7 @@ defmodule Dankie.Bot do
     answer(context, res)
   end
 
-  def handle({:command, "lister", msg = %Message{}}, context) do
+  def handle({:command, "listar", msg = %Message{}}, context) do
     {:ok, res} = Dankie.Triggers.list_triggers(msg)
     answer(context, res)
   end
@@ -126,8 +126,13 @@ defmodule Dankie.Bot do
 
     case Dankie.Triggers.check_trigger_match(text, chat.id) do
       {:ok, trigger_msg_id} ->
-        {:ok, _} =
-          ExGram.copy_message(chat.id, chat.id, trigger_msg_id, bot: @bot, caption: "")
+        case ExGram.copy_message(chat.id, chat.id, trigger_msg_id, bot: @bot, caption: "") do
+          {:ok, _} ->
+            nil
+
+          err ->
+            Logger.error("Got an error while returning a trigger reponse: #{inspect(err)}")
+        end
 
       {:error, _} ->
         nil
