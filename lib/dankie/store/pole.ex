@@ -3,7 +3,7 @@ defmodule Dankie.Pole.Storage do
   Persistent storage using RocksDB for daily tracking and leaderboards.
   """
 
-  @rocksdb_path "./store/pole_data"
+  @rocksdb_path "./store/#{Mix.env()}/pole_data"
   @rocksdb_options [create_if_missing: true]
 
   @doc """
