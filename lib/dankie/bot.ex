@@ -54,6 +54,11 @@ defmodule Dankie.Bot do
     answer(context, res)
   end
 
+  def handle({:command, "lister", msg = %Message{}}, context) do
+    {:ok, res} = Dankie.Triggers.list_triggers(msg)
+    answer(context, res)
+  end
+
   def handle({:command, "dolar", _msg}, context) do
     response =
       Dankie.Dolar.fetch_data()
