@@ -1,6 +1,7 @@
 defmodule Dankie.Triggers do
   import Dankie.Troesmas
   alias ExGram.Model.Message
+  use NewRelic.Tracer
 
   @spec add_trigger(Update.t()) :: {:ok, binary()} | {:error, binary()}
   def add_trigger(%Message{text: ""}), do: {:ok, troesmizar("Me tenés que pasar un texto")}
@@ -38,6 +39,7 @@ defmodule Dankie.Triggers do
   end
 
   @spec check_trigger_match(String.t(), integer()) :: {:ok, integer()} | {:error, :no_match}
+  @trace :check_trigger_match
   def check_trigger_match(text, chat_id) when is_binary(text) and is_number(chat_id) do
     regex_matching_fun = fn {pattern, msg_id} ->
       case Regex.compile(pattern) do
