@@ -21,14 +21,16 @@ defmodule Dankie.Gatitos do
     end
   end
 
-  # def random_cat_gif do
-  #   case get("/cat/gif") do
-  #     {:ok, %Tesla.Env{body: raw_gif}} ->
-  #       {:ok, raw_gif}
-
-  #     {:error, err} ->
-  #       Logger.error("Got error while trying to reach cats API: #{inspect(err)}")
-  #       :error
-  #   end
-  # end
+  def random_cat_gif do
+    with {:ok, %Tesla.Env{body: img}} <- get("/cat/gif"),
+         img_id = Enum.random(1..1_000_000),
+         img_path = "/tmp/cat_#{img_id}.gif",
+         :ok <- File.write(img_path, img) do
+      {:ok, img_path}
+    else
+      {:error, err} ->
+        Logger.error("Got error while trying to reach cats API: #{inspect(err)}")
+        :error
+    end
+  end
 end

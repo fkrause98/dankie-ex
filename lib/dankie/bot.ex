@@ -100,6 +100,22 @@ defmodule Dankie.Bot do
         ExGram.send_photo(chat.id, {:file, image_path}, bot: @bot)
 
       _err ->
+        answer(context, Troesmas.troesmizar("Mmmm, no encontré ningún gatito, intentá más tarde"))
+    end
+  end
+
+  def handle({:command, "gifgatito", msg = %Message{chat: chat}}, context) do
+    case Dankie.Gatitos.random_cat_gif() do
+      {:ok, image_path} ->
+        case ExGram.send_animation(chat.id, {:file, image_path}, bot: @bot) do
+          {:ok, _} ->
+            nil
+
+          err ->
+            Logger.error("Got an error while trying to send a picture: #{inspect(err)}")
+        end
+
+      _err ->
         answer(context, Troesmas.troesmizar("Mmmm, no encontré ningún gatito, intená más tarde"))
     end
   end
