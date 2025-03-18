@@ -5,8 +5,8 @@ defmodule Dankie.Gatitos do
 
   ## TODO:
   ## 1. Enable advanced tags
-  ## 2. Enable gifs send
-  ## 3. Periodically clean-up images
+  ## 2. Periodically clean-up images
+  ## 3. Consider making this a GenServer that has an image pre-cached.
 
   def random_cat do
     with {:ok, %Tesla.Env{body: img}} <- get("/cat"),

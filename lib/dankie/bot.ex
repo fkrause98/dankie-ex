@@ -120,6 +120,22 @@ defmodule Dankie.Bot do
     end
   end
 
+  def handle({:command, "perrito", msg = %Message{chat: chat}}, context) do
+    case Dankie.Perritos.random_dog() do
+      {:ok, image_url} ->
+        case ExGram.send_photo(chat.id, image_url, bot: @bot) do
+          {:ok, _} ->
+            nil
+
+          err ->
+            Logger.error("Got an error while trying to send a picture: #{inspect(err)}")
+        end
+
+      _err ->
+        answer(context, Troesmas.troesmizar("Mmmm, no encontré ningún perrito, intená más tarde"))
+    end
+  end
+
   def handle({:command, unknown, _update}, _context) do
     Logger.info("Unknown comand #{unknown} received, ignoring...")
   end
