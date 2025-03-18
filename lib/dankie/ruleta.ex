@@ -41,8 +41,12 @@ defmodule Dankie.Ruleta.Instance do
   end
 
   @impl true
-  def handle_call(:pull_trigger, _from, %{state: state} = game_state) do
-    result = Enum.random([:empty, :shoot])
-    {:reply, result, %{game_state | state: result}}
+  def handle_call(:pull_trigger, _from, %{state: [:empty | rest]} = game_state) do
+    {:reply, :empty, %{game_state | state: rest}}
+  end
+
+  @impl true
+  def handle_call(:pull_trigger, _from, %{state: [:shoot | rest]} = game_state) do
+    {:stop, :finished, :shoot, %{}}
   end
 end
