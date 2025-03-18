@@ -59,9 +59,12 @@ defmodule Dankie.Pole do
       |> Enum.with_index(1)
       |> Enum.map_join("\n", fn {{{user_id, username}, count}, index} ->
         user = if username, do: "#{username}", else: "Usuario #{user_id}"
-        "#{index}. #{user}: #{count} veces"
+        "#{index}. #{user}: #{count} #{text_for_count(count)}"
       end)
 
     "🏆 Clasificación de Poles 🏆\n\n#{entries}"
   end
+
+  defp text_for_count(1), do: "vez"
+  defp text_for_count(n) when n > 1, do: "veces"
 end
