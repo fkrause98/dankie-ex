@@ -16,4 +16,9 @@ config :logger, :default_handler,
     compress_on_rotate: true
   ]
 
-config :new_relic_agent, logs_in_context: :forwarder
+config :new_relic_agent,
+  logs_in_context: :direct,
+  app_name: "dankie-ex",
+  function_argument_collection_enabled: true,
+  plug_instrumentation_enabled: true,
+  finch_instrumentation_enabled: true
