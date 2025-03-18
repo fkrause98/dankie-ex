@@ -18,7 +18,6 @@ defmodule Dankie.Application do
          method: :polling,
          token: System.fetch_env!("BOT_TOKEN")
        ]},
-      Dankie.Pole,
       Dankie.Ruleta.Supervisor
     ]
 

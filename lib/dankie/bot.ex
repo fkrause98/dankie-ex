@@ -35,8 +35,12 @@ defmodule Dankie.Bot do
     answer(context, response)
   end
 
-  def handle({:command, "listar", msg = %Message{}}, context) do
-    {:ok, response} = Dankie.Triggers.list_triggers(msg)
+  def handle({:command, "poles", %Message{chat: %Chat{id: chat_id}}}, context) do
+    response =
+      chat_id
+      |> Dankie.Pole.get_leaderboard()
+      |> Dankie.Pole.format_leaderboard()
+
     answer(context, response)
   end
 
@@ -86,12 +90,16 @@ defmodule Dankie.Bot do
 
   def handle({:text, text, msg = %Message{chat: chat}}, context) do
     # Check if we have to dispatch 'La Pole'
-    if Dankie.Pole.should_congratulate?(chat.id) do
-      ExGram.send_message(
-        chat.id,
-        "@#{msg.from.username} ganastes la pole negri, bien ahí",
-        bot: @bot
-      )
+    case Dankie.Pole.should_congratulate?(chat.id) do
+      :already_done ->
+        nil
+
+      :must_congratulate ->
+        ExGram.send_message(
+          chat.id,
+          "@#{msg.from.username} ganastes la pole negri, bien ahí",
+          bot: @bot
+        )
     end
 
     case Dankie.Triggers.check_trigger_match(text, chat.id) do

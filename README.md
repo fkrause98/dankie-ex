@@ -24,3 +24,8 @@ iex -S mix
 1. Follow the steps 1, 2, 3 and 4 from above.
 2. Generate a release with `mix deps.get && MIX_ENV=prod mix env release` and follow the
    steps to start the bot.
+
+
+## Relevant links
+- [Rocksdb wrapper](https://gitlab.com/barrel-db/erlang-rocksdb/-/wikis/Getting-started)
+- [Telegram wrapper](https://hexdocs.pm/ex_gram/readme.html)
