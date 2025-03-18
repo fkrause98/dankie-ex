@@ -35,7 +35,9 @@ defmodule Dankie.Ruleta.Instance do
 
   @impl true
   def init(chat_id) do
-    {:ok, %{chat_id: chat_id, state: Enum.random([:empty, :shoot])}}
+    five_empties = for n <- [1, 2, 3, 4, 5], do: :empty
+    randomized = Enum.shuffle(five_empties ++ [:shoot])
+    {:ok, %{chat_id: chat_id, state: randomized}}
   end
 
   @impl true
