@@ -41,7 +41,12 @@ defmodule Dankie.Bot do
       |> Dankie.Pole.get_leaderboard()
       |> Dankie.Pole.format_leaderboard()
 
-    answer(context, response)
+    ExGram.send_message(
+      chat_id,
+      response,
+      disable_notification: true,
+      bot: @bot
+    )
   end
 
   def handle({:command, "borrar", msg = %Message{}}, context) do
@@ -95,6 +100,8 @@ defmodule Dankie.Bot do
         nil
 
       :must_congratulate ->
+        Dankie.Pole.record_winner(chat.id, msg.from)
+
         ExGram.send_message(
           chat.id,
           "@#{msg.from.username} ganastes la pole negri, bien ahí",

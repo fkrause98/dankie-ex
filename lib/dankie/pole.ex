@@ -45,8 +45,11 @@ defmodule Dankie.Pole do
     Storage.reset_all()
   end
 
+  @doc """
+  Formats the leaderboard into a readable string.
+  """
   def format_leaderboard(leaderboard) when map_size(leaderboard) == 0 do
-    Dankie.Troesmas.troesmizar("No hay poles todavía")
+    "No hay poles todavía"
   end
 
   def format_leaderboard(leaderboard) do
@@ -54,8 +57,8 @@ defmodule Dankie.Pole do
       leaderboard
       |> Enum.sort_by(fn {_user, count} -> -count end)
       |> Enum.with_index(1)
-      |> Enum.map_join("\n", fn {{user_id, username}, count}, index ->
-        user = if username, do: "@#{username}", else: "Usuario #{user_id}"
+      |> Enum.map_join("\n", fn {{{user_id, username}, count}, index} ->
+        user = if username, do: "#{username}", else: "Usuario #{user_id}"
         "#{index}. #{user}: #{count} veces"
       end)
 
