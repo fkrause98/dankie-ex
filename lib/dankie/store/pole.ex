@@ -51,7 +51,7 @@ defmodule Dankie.Pole.Storage do
       key = "leaderboard:#{chat_id}"
 
       current =
-        case :rocksdb.get(db, key, []) |> dbg do
+        case :rocksdb.get(db, key, []) do
           {:ok, bin} -> :erlang.binary_to_term(bin)
           :not_found -> %{}
         end
