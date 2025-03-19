@@ -10,29 +10,61 @@ defmodule Dankie.Bot do
 
   middleware(ExGram.Middleware.IgnoreUsername)
 
+  @command_list [
+    %BotCommand{command: "agregar", description: "Agrega como trigger al texto dado"},
+    %BotCommand{command: "dolar", description: "Doy una lista de las cotizaciones"},
+    %BotCommand{command: "poles", description: "Listar las poles para este chat"},
+    %BotCommand{command: "borrar", description: "Borra el trigger en base al texto dado"},
+    %BotCommand{command: "listar", description: "Lista los triggers existentes para este chat"},
+    %BotCommand{command: "ruleta", description: "Un jueguito muy divertido"},
+    %BotCommand{command: "gatito", description: "Mando la foto de un gatito"},
+    %BotCommand{command: "gifgatito", description: "Mando un gif de un gatito"},
+    %BotCommand{command: "perrito", description: "Mando la foto de un perrito"}
+  ]
+
   command("start")
 
   def bot(), do: @bot
 
   def init(opts) do
-    {:ok, _} = ExGram.get_me(token: opts[:token])
-
-    {:ok, _} = Exgram.delete_my_commands(token: opts[:token])
+    {:ok, _} = ExGram.get_me(bot: opts[:bot])
 
     {:ok, true} =
       ExGram.set_my_commands(
-        [
-          %BotCommand{command: "agregar", description: "Agregar un trigger local"},
-          %BotCommand{command: "dolar", description: "Doy una lista de las cotizaciones"}
-        ],
-        token: opts[:token]
+        @command_list,
+        bot: opts[:bot]
       )
 
     :ok
   end
 
-  def handle({:command, :start, _msg}, context) do
-    answer(context, "Hi!")
+  def handle({:command, "start", _msg}, context) do
+    answer(context, "Hola! Podés usar /comandos para saber lo puedo hacer :D")
+  end
+
+  def handle({:command, "comandos", _msg}, context) do
+    commands_text =
+      @command_list
+      |> Enum.map(fn cmd ->
+        "/#{cmd.command} - #{cmd.description}"
+      end)
+      |> Enum.join("\n")
+
+    built_in_commands = [
+      "/start - Te doy un mensaje de bienvenida",
+      "/comandos - Muestra esta lista de comandos"
+    ]
+
+    full_text = """
+    ¡Hola! Estos son los comandos disponibles:
+
+    #{commands_text}
+    #{Enum.join(built_in_commands, "\n")}
+
+    Usá estos comandos escribiendo el símbolo / seguido del nombre del comando. #{Troesmas.troesmizar("Divertite")}
+    """
+
+    answer(context, full_text)
   end
 
   def handle({:command, "agregar", update}, context) do
