@@ -20,7 +20,7 @@ defmodule Dankie.Application do
          delete_webhook: false
        ]},
       Dankie.Ruleta,
-      Dankie.Dolar
+      Dankie.Dolar.Fetcher
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

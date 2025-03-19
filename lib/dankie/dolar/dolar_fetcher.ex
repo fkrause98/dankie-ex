@@ -1,6 +1,5 @@
 defmodule Dankie.Dolar.Fetcher do
   @two_minutes_in_ms 2 * 60 * 1000
-
   use GenServer
 
   def start_link(_) do
