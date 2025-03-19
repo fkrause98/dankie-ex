@@ -3,7 +3,7 @@ defmodule Dankie.Dolar do
   import Dankie.Troesmas
 
   def cached_data() do
-    cached_data = GenServer.call(__MODULE__, :state)
+    cached_data = GenServer.call(Dankie.Dolar.Fetcher, :state)
     {:ok, cached_data |> Enum.map(&raw_map_to_typed/1)}
   end
 
