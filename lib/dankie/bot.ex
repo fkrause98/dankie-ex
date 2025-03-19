@@ -38,7 +38,7 @@ defmodule Dankie.Bot do
     answer(context, response)
   end
 
-  def handle({:command, "poles", %Message{chat: %Chat{id: chat_id}}}, context) do
+  def handle({:command, "poles", %Message{chat: %Chat{id: chat_id}}}, _context) do
     response =
       chat_id
       |> Dankie.Pole.get_leaderboard()
@@ -73,7 +73,7 @@ defmodule Dankie.Bot do
     )
   end
 
-  def handle({:command, "ruleta", msg = %Message{chat: %Chat{id: id}}}, context) do
+  def handle({:command, "ruleta", _msg = %Message{chat: %Chat{id: id}}}, context) do
     case Dankie.Ruleta.advance_game(id) do
       {:error, :game_not_found} ->
         {:ok, _pid} = Dankie.Ruleta.new_game(id)
@@ -97,7 +97,7 @@ defmodule Dankie.Bot do
     end
   end
 
-  def handle({:command, "gatito", msg = %Message{chat: chat}}, context) do
+  def handle({:command, "gatito", _msg = %Message{chat: chat}}, context) do
     case Dankie.Gatitos.random_cat() do
       {:ok, image_path} ->
         ExGram.send_photo(chat.id, {:file, image_path}, bot: @bot)
@@ -107,7 +107,7 @@ defmodule Dankie.Bot do
     end
   end
 
-  def handle({:command, "gifgatito", msg = %Message{chat: chat}}, context) do
+  def handle({:command, "gifgatito", _msg = %Message{chat: chat}}, context) do
     case Dankie.Gatitos.random_cat_gif() do
       {:ok, image_path} ->
         case ExGram.send_animation(chat.id, {:file, image_path}, bot: @bot) do
@@ -123,7 +123,7 @@ defmodule Dankie.Bot do
     end
   end
 
-  def handle({:command, "perrito", msg = %Message{chat: chat}}, context) do
+  def handle({:command, "perrito", _msg = %Message{chat: chat}}, context) do
     case Dankie.Perritos.random_dog() do
       {:ok, image_url} ->
         case ExGram.send_photo(chat.id, image_url, bot: @bot) do
@@ -143,8 +143,7 @@ defmodule Dankie.Bot do
     Logger.info("Unknown comand #{unknown} received, ignoring...")
   end
 
-  def handle({:text, text, msg = %Message{chat: chat}}, context) do
-    IO.inspect("DOLAR", label: Text)
+  def handle({:text, text, msg = %Message{chat: chat}}, _context) do
     # Check if we have to dispatch 'La Pole'
     case Dankie.Pole.should_congratulate?(chat.id) do
       :already_done ->
@@ -176,6 +175,6 @@ defmodule Dankie.Bot do
   end
 
   def handle(unknown_update, _context) do
-    Logger.warn("Unknown update received, ignoring. Content is: #{inspect(unknown_update)} ")
+    Logger.warning("Unknown update received, ignoring. Content is: #{inspect(unknown_update)} ")
   end
 end

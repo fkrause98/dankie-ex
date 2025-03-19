@@ -1,50 +1,6 @@
 defmodule Dankie.Dolar do
   require Logger
   import Dankie.Troesmas
-  @two_minutes_in_ms 2 * 60 * 1000
-
-  use GenServer
-
-  def start_link(_) do
-    GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
-  end
-
-  @impl true
-  def init(state) do
-    state =
-      case fetch_data() do
-        {:ok, dollars_json} ->
-          dollars_json
-
-        _ ->
-          %{}
-      end
-
-    schedule_work()
-    {:ok, state}
-  end
-
-  @impl true
-  def handle_info(:fetch_dollar_data, state) do
-    state =
-      case fetch_data() do
-        {:ok, dollars_json} ->
-          dollars_json
-
-        _ ->
-          state
-      end
-
-    schedule_work()
-    {:noreply, state}
-  end
-
-  @impl true
-  def handle_call(:state, _from, state), do: {:reply, state, state}
-
-  defp schedule_work() do
-    Process.send_after(self(), :fetch_dollar_data, @two_minutes_in_ms)
-  end
 
   def cached_data() do
     cached_data = GenServer.call(__MODULE__, :state)
@@ -63,7 +19,7 @@ defmodule Dankie.Dolar do
 
   @url "https://dolarapi.com/v1/dolares"
   @spec fetch_data() :: {:ok | :error, [exchange_rate()]}
-  defp fetch_data() do
+  def fetch_data() do
     with {:ok, %{body: response}} <- Tesla.get(@url),
          {:ok, dollars_json} <- Jason.decode(response) do
       {:ok, dollars_json}

@@ -1,5 +1,5 @@
 defmodule Dankie.Ruleta do
-  def child_spec(opts) do
+  def child_spec(_opts) do
     %{
       id: __MODULE__,
       start: {__MODULE__, :start_link, []},
@@ -40,7 +40,7 @@ defmodule Dankie.Ruleta do
   end
 
   def init(chat_id) do
-    five_empties = for n <- [1, 2, 3, 4, 5], do: :empty
+    five_empties = for _ <- [1, 2, 3, 4, 5], do: :empty
     randomized = Enum.shuffle(five_empties ++ [:shoot])
     {:ok, %{chat_id: chat_id, state: randomized}}
   end

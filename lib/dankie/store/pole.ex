@@ -6,9 +6,7 @@ defmodule Dankie.Pole.Storage do
   @rocksdb_path "./store/#{Mix.env()}/pole_data"
   @rocksdb_options [create_if_missing: true]
 
-  @doc """
-  Opens a RocksDB connection and yields it to the given function.
-  """
+  # Opens a RocksDB connection and yields it to the given function.
   defp with_db(fun) do
     {:ok, db} = :rocksdb.open(String.to_charlist(@rocksdb_path), @rocksdb_options)
 

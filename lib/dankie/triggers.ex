@@ -41,7 +41,7 @@ defmodule Dankie.Triggers do
   @spec check_trigger_match(String.t(), integer()) :: {:ok, integer()} | {:error, :no_match}
   @trace :check_trigger_match
   def check_trigger_match(text, chat_id) when is_binary(text) and is_number(chat_id) do
-    NewRelic.add_span_attributes(regex: text, chat_id: chat_id)
+    NewRelic.add_attributes(regex: text, chat_id: chat_id)
 
     regex_matching_fun = fn {pattern, msg_id} ->
       case Regex.compile(pattern) do
