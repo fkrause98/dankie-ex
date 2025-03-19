@@ -17,6 +17,8 @@ defmodule Dankie.Bot do
   def init(opts) do
     {:ok, _} = ExGram.get_me(token: opts[:token])
 
+    {:ok, _} = Exgram.delete_my_commands(token: opts[:token])
+
     {:ok, true} =
       ExGram.set_my_commands(
         [
