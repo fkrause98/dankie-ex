@@ -10,7 +10,7 @@ defmodule Dankie.Application do
     children = [
       # Starts a worker by calling: Dankie.Worker.start_link(arg)
       # {Dankie.Worker, arg}
-      # {Plug.Cowboy, scheme: :http, plug: Dankie.Router, options: [port: 8000]},
+      {Plug.Cowboy, scheme: :http, plug: Dankie.Router, options: [port: 8000]},
       {Finch, name: MyFinch},
       ExGram,
       {Dankie.Bot,
