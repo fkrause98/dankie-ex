@@ -16,9 +16,11 @@ defmodule Dankie.Application do
       {Dankie.Bot,
        [
          method: :polling,
-         token: System.fetch_env!("BOT_TOKEN")
+         token: System.fetch_env!("BOT_TOKEN"),
+         delete_webhook: false
        ]},
-      Dankie.Ruleta
+      Dankie.Ruleta,
+      Dankie.Dolar
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

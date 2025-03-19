@@ -19,7 +19,10 @@ defmodule Dankie.Bot do
 
     {:ok, true} =
       ExGram.set_my_commands(
-        [%BotCommand{command: "agregar", description: "Agregar un trigger local"}],
+        [
+          %BotCommand{command: "agregar", description: "Agregar un trigger local"},
+          %BotCommand{command: "dolar", description: "Doy una lista de las cotizaciones"}
+        ],
         token: opts[:token]
       )
 
@@ -61,7 +64,7 @@ defmodule Dankie.Bot do
 
   def handle({:command, "dolar", _msg}, context) do
     response =
-      Dankie.Dolar.fetch_data()
+      Dankie.Dolar.cached_data()
       |> Dankie.Dolar.prepare_msg_text()
 
     answer(
@@ -141,6 +144,7 @@ defmodule Dankie.Bot do
   end
 
   def handle({:text, text, msg = %Message{chat: chat}}, context) do
+    IO.inspect("DOLAR", label: Text)
     # Check if we have to dispatch 'La Pole'
     case Dankie.Pole.should_congratulate?(chat.id) do
       :already_done ->

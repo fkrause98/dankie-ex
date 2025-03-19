@@ -39,20 +39,16 @@ defmodule Dankie.Ruleta do
     end
   end
 
-  # Server callbacks
-  @impl true
   def init(chat_id) do
     five_empties = for n <- [1, 2, 3, 4, 5], do: :empty
     randomized = Enum.shuffle(five_empties ++ [:shoot])
     {:ok, %{chat_id: chat_id, state: randomized}}
   end
 
-  @impl true
   def handle_call(:pull_trigger, _from, %{state: [:empty | rest]} = game_state) do
     {:reply, :empty, %{game_state | state: rest}}
   end
 
-  @impl true
   def handle_call(:pull_trigger, _from, %{state: [:shoot | _rest]} = _game_state) do
     {:stop, :normal, :shoot, %{}}
   end
